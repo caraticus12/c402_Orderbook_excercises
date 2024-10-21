@@ -1,0 +1,57 @@
+-- Daniel Hewitt c402
+
+/*
+Basic Selects
+
+REQUIREMENT - Use a multi-line comment to paste the first 5 or fewer results under your query
+		     Also include the total records returned.
+*/
+
+USE orderbook_activity_db;
+
+-- 1. List all users, including username and dateJoined.
+select username, dateJoined from user;
+
+-- 2. List the username and dateJoined from users with the newest users at the top.
+select username, dateJoined from user order by dateJoined desc;
+
+-- 3. List all usernames and dateJoined for users who joined in March 2023.
+select username, dateJoined 
+from user 
+where dateJoined between '2023-03-01' and '2023-03-31';
+
+-- 4. List the different role names a user can have.
+select distinct role from user;
+
+-- 5. List all the orders.
+select * from `order`;
+
+-- 6. List all orders in March where the absolute net order amount is greater than 1000.
+select * 
+from `order` 
+where month(orderTime) = 3 
+and abs(shares * price) > 1000;
+
+-- 7. List all the unique status types from orders.
+select distinct status from `order`;
+
+-- 8. List all pending and partial fill orders with oldest orders first.
+select * 
+from `order` 
+where status in ('pending', 'partial_fill') 
+order by orderTime asc;
+
+-- 9. List the 10 most expensive financial products where the productType is stock.
+select symbol, price 
+from product 
+where productType = 'stock' 
+order by price desc 
+limit 10;
+
+-- 10. Display orderid, fillid, userid, symbol, and absolute net fill amount
+-- from fills where the absolute net fill is greater than $1000.
+select orderid, fillid, userid, symbol, abs(shares * price) as netFill 
+from fill 
+where abs(shares * price) > 1000
+order by netFill desc;
+

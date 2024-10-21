@@ -1,0 +1,74 @@
+-- Daniel Hewitt c402
+
+/*
+Aggregate Queries
+
+REQUIREMENT - Use a multi-line comment to paste the first 5 or fewer results under your query
+		     THEN records returned. 
+*/
+
+USE orderbook_activity_db;
+
+-- 1. How many users do we have?
+select count(*) as totalUsers from user;
+
+-- 2. List the username, userid, and number of orders each user has placed.
+select user.username, user.userid, count(`order`.orderid) as numOrders
+from user
+left join `order` on user.userid = `order`.userid
+group by user.userid;
+
+-- 3. List the username, symbol, and number of orders placed for each user and for each symbol.
+select user.username, `order`.symbol, count(`order`.orderid) as numOrders
+from user
+join `order` on user.userid = `order`.userid
+group by user.username, `order`.symbol
+order by `order`.symbol asc;
+
+-- 4. Perform the same query as the one above, but only include admin users.
+select user.username, `order`.symbol, count(`order`.orderid) as numOrders
+from user
+join `order` on user.userid = `order`.userid
+where user.role = 'admin'
+group by user.username, `order`.symbol
+order by `order`.symbol asc;
+
+-- 5. List the username and the average absolute net order amount for each user with an order.
+-- Round the result to the nearest hundredth and use an alias (averageTradePrice).
+select user.username, round(avg(abs(`order`.shares * `order`.price)), 2) as averageTradePrice
+from user
+join `order` on user.userid = `order`.userid
+group by user.username
+order by averageTradePrice desc;
+
+-- 6. How many shares for each symbol does each user have?
+-- Display the username and symbol with number of shares.
+select user.username, `order`.symbol, sum(`order`.shares) as totalShares
+from user
+join `order` on user.userid = `order`.userid
+group by user.username, `order`.symbol;
+
+-- 7. What symbols have at least 3 orders?
+select symbol, count(orderid) as numOrders 
+from `order`
+group by symbol
+having numOrders >= 3;
+
+-- 8. List all the symbols and absolute net fills that have fills exceeding $100.
+-- Do not include the WLY symbol in the results.
+select symbol, abs(shares * price) as netFill 
+from fill
+where abs(shares * price) > 100
+and symbol != 'WLY'
+order by netFill desc;
+
+-- 9. List the top five users with the greatest amount of outstanding orders.
+-- Display the absolute amount filled, absolute amount ordered, and net outstanding.
+select user.username, abs(sum(fill.shares)) as filledShares, abs(sum(`order`.shares)) as orderedShares,
+abs(sum(`order`.shares) - sum(fill.shares)) as netOutstanding
+from user
+join `order` on user.userid = `order`.userid
+join fill on `order`.orderid = fill.orderid
+group by user.username
+order by netOutstanding desc
+limit 5;
